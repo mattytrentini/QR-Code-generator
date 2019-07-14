@@ -21,11 +21,12 @@
 #   Software.
 # 
 try:
-	import micropython  # Use to detect if we're running in a MicroPython environment
-	import collections.deque as collections
-	import ure as re
-except ModuleNotFoundError:
-	import collections, re
+       import micropython  # Use to detect if we're running in a MicroPython environment
+       import collections.deque as collections
+       import ure as re
+except:  # Prefer to catch ModuleNotFoundError but MicroPython instead throws ImportError
+       import collections, re
+
 
 import itertools, sys
 
