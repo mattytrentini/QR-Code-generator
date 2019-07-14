@@ -20,9 +20,14 @@
 #   out of or in connection with the Software or the use or other dealings in the
 #   Software.
 # 
+try:
+	import micropython  # Use to detect if we're running in a MicroPython environment
+	import collections.deque as collections
+	import ure as re
+except ModuleNotFoundError:
+	import collections, re
 
-import collections, itertools, re, sys
-
+import itertools, sys
 
 """
 This module "qrcodegen", public members:
@@ -464,7 +469,7 @@ class QrCode(object):
 		
 		# Adjacent modules in row having same color, and finder-like patterns
 		for y in range(size):
-			runhistory = collections.deque([0] * 7, 7)
+			runhistory = collections.deque([0] * 7)
 			color = False
 			runx = 0
 			for x in range(size):
@@ -487,7 +492,7 @@ class QrCode(object):
 				result += QrCode._PENALTY_N3
 		# Adjacent modules in column having same color, and finder-like patterns
 		for x in range(size):
-			runhistory = collections.deque([0] * 7, 7)
+			runhistory = collections.deque([0] * 7)
 			color = False
 			runy = 0
 			for y in range(size):
@@ -569,6 +574,7 @@ class QrCode(object):
 	
 	@staticmethod
 	def has_finder_like_pattern(runhistory):
+		runhistory = list(runhistory)
 		n = runhistory[1]
 		return n > 0 and n == runhistory[2] == runhistory[4] == runhistory[5] \
 			and runhistory[3] == n * 3 and max(runhistory[0], runhistory[6]) >= n * 4
@@ -650,7 +656,7 @@ class QrSegment(object):
 		"""Returns a segment representing the given binary data encoded in byte mode.
 		All input byte lists are acceptable. Any text string can be converted to
 		UTF-8 bytes (s.encode("UTF-8")) and encoded as a byte mode segment."""
-		py3 = sys.version_info.major >= 3
+		py3 = sys.version_info[0] >= 3
 		if (py3 and isinstance(data, str)) or (not py3 and isinstance(data, unicode)):
 			raise TypeError("Byte string/list expected")
 		if not py3 and isinstance(data, str):
@@ -681,6 +687,7 @@ class QrSegment(object):
 		The characters allowed are: 0 to 9, A to Z (uppercase only), space,
 		dollar, percent, asterisk, plus, hyphen, period, slash, colon."""
 		if QrSegment.ALPHANUMERIC_REGEX.match(text) is None:
+			print(text, len(text))
 			raise ValueError("String contains unencodable characters in alphanumeric mode")
 		bb = _BitBuffer()
 		for i in range(0, len(text) - 1, 2):  # Process groups of 2
@@ -696,7 +703,7 @@ class QrSegment(object):
 	def make_segments(text):
 		"""Returns a new mutable list of zero or more segments to represent the given Unicode text string.
 		The result may use various segment modes and switch modes to optimize the length of the bit stream."""
-		if not (isinstance(text, str) or (sys.version_info.major < 3 and isinstance(text, unicode))):
+		if not (isinstance(text, str) or (sys.version_info[0] < 3 and isinstance(text, unicode))):
 			raise TypeError("Text string expected")
 		
 		# Select the most efficient segment encoding automatically
@@ -789,14 +796,14 @@ class QrSegment(object):
 	# (Public) Describes precisely all strings that are encodable in numeric mode.
 	# To test whether a string s is encodable: ok = NUMERIC_REGEX.fullmatch(s) is not None
 	# A string is encodable iff each character is in the range 0 to 9.
-	NUMERIC_REGEX = re.compile(r"[0-9]*\Z")
+	NUMERIC_REGEX = re.compile(r"[0-9]*$")
 	
 	# (Public) Describes precisely all strings that are encodable in alphanumeric mode.
 	# To test whether a string s is encodable: ok = ALPHANUMERIC_REGEX.fullmatch(s) is not None
 	# A string is encodable iff each character is in the following set: 0 to 9, A to Z
 	# (uppercase only), space, dollar, percent, asterisk, plus, hyphen, period, slash, colon.
 
-	ALPHANUMERIC_REGEX = re.compile(r"[A-Z0-9 $%*+./:-]*\Z")
+	ALPHANUMERIC_REGEX = re.compile(r"[A-Z0-9 $%*+./:-]*$")
 	
 	# (Private) Dictionary of "0"->0, "A"->10, "$"->37, etc.
 	_ALPHANUMERIC_ENCODING_TABLE = {ch: i for (i, ch) in enumerate("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:")}

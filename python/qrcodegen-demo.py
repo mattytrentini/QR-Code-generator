@@ -24,7 +24,7 @@
 #   Software.
 # 
 
-from __future__ import print_function
+#from __future__ import print_function
 from qrcodegen import QrCode, QrSegment
 
 
