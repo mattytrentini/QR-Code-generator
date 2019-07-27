@@ -55,19 +55,15 @@ def test(text="QR Code Test", ecc_quality=QrCode.Ecc.LOW):
     gc.collect()
     print(micropython.mem_info())
     t = utime.ticks_ms()
-    dt1 = utime.ticks_diff(utime.ticks_ms(), t)
-    t = utime.ticks_ms()
     qr0 = QrCode.encode_text(text, ecc_quality)
-    dt2 = utime.ticks_diff(utime.ticks_ms(), t)
-    t = utime.ticks_ms()
+    dt = utime.ticks_diff(utime.ticks_ms(), t)
     modules = qr0._modules
-    dt3 = utime.ticks_diff(utime.ticks_ms(), t)
-    print(dt1, dt2, dt3)
+    print(dt)
     gc.collect()
     print(micropython.mem_info())
 ```
 
-`dt2` is typically ~1.9 seconds.
+`dt` is typically ~1.7-1.9 seconds.
 
 ### Notes on performance
 
